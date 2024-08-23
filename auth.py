@@ -8,13 +8,13 @@ db = client["task_manager"]
 users_collection = db["users"]
 
 # User Schema
-def create_user(username, password, role, phone_number):
+def create_user(username, password, role):
     return {
         "username": username,
         "password": hash_password(password),  # Store the hashed password
         "role": role,
         # "email": email,
-        "phone_number": phone_number
+        # "phone_number": phone_number
     }
 
 # Create Member Function
@@ -24,15 +24,15 @@ def signup():
     password = st.text_input("Password", type='password', key="signup_password")
     # email = st.text_input("Email", key="signup_email")
     role = st.selectbox("Role", ["member", "team lead"], key="signup_role")
-    phone_number = st.text_input("Phone Number", key="signup_phone_number")  
+    # phone_number = st.text_input("Phone Number", key="signup_phone_number")  
 
     if st.button("Create Member", key="signup_button"):
         if users_collection.find_one({"username": username}):
             st.error("Username already exists. Please choose a different username.")
         else:
-            user = create_user(username, password, role, phone_number)
+            user = create_user(username, password, role)
             users_collection.insert_one(user)
-            st.success("User created successfully!")
+            st.success(f"{role} created successfully!")
 
 # Login Function
 def login():
