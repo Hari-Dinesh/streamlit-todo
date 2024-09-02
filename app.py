@@ -3,13 +3,16 @@ import pymongo
 from datetime import datetime
 from auth import login, signup
 from task_manager import task_manager
+from Goals import goal_manager
 from utils import hash_password, verify_password
+import pandas as pd
 
 # MongoDB Client Setup
 client = pymongo.MongoClient("mongodb+srv://dinesh:Asdfg123&()@cluster0.5nxca.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 db = client["task_manager"]
 users_collection = db["users"]
 tasks_collection = db["tasks"]
+goals_collection = db['goals']
 
 # Function to view member tasks (Team Lead only)
 def view_member_tasks():
@@ -39,6 +42,44 @@ def view_member_tasks():
             task_date = task['date'].strftime("%A, %Y-%m-%d %I:%M %p")  # Format the date
             if st.button(task["task"][:5]+".....", key=f"history_task_button_{task['_id']}"):
                     st.text_area("Task Details on-"+task_date, value=task["task"], key=f"history_task_textarea_{task['_id']}", disabled=True)
+
+def view_goals():
+    st.title("View Member Goals")
+    selected_month = st.selectbox("Select Month", range(1, 13), format_func=lambda x: datetime(2022, x, 1).strftime('%B'), key="view_month")
+    selected_year = st.selectbox("Select Year", range(datetime.now().year, datetime.now().year + 5), key="view_year")
+    selected_member=st.session_state["username"]
+    view_criteria = {"member": selected_member, "month": selected_month, "year": selected_year}
+    goals = list(goals_collection.find(view_criteria))
+    if goals:
+            # Convert goals to DataFrame for display
+            goal_data = pd.DataFrame(goals)
+            goal_data = goal_data[["goal", "story_points", "type", "comments", "completed", "_id"]]
+            goal_data.columns = ["Goal", "Story Points", "Type", "Comments", "Completed Points", "ID"]
+
+            # Display progress calculation
+            total_story_points = goal_data["Story Points"].sum()
+            total_completed_points = goal_data["Completed Points"].sum()
+            progress = (total_completed_points / total_story_points * 100) if total_story_points > 0 else 0
+            st.markdown(f"### Progress: {progress:.2f}%")
+
+            # Display 'Completed Points' editable field
+            edited_df = st.data_editor(
+                goal_data.drop(columns=["ID"]),
+                # column_config={
+                #     "Completed Points": st.column_config.NumberColumn(
+                #         "Completed Points",
+                #         help="Edit completed points",
+                #         min_value=0.0,
+                #         step=0.1,
+                #         format="%.1f"
+                #     )
+                # },
+                disabled=["Goal", "Story Points", "Type", "Comments","Completed Points"],  # Disable editing for these columns
+                num_rows="fixed"  # Prevent adding new rows
+            )
+
+            
+            
         
 
 # Function to update password
@@ -78,8 +119,11 @@ def main():
         # Sidebar navigation menu with radio buttons
         menu = ["Task Manager", "Update Password"]
         if st.session_state["role"] == "team lead":
-            menu.append("Create Member")
+            menu.append("Add Monthly Goals")
             menu.append("View Member Tasks")
+            menu.append("Create Member")
+        elif st.session_state["role"]=="member":
+            menu.append("view monthly goals")
 
         choice = st.sidebar.radio("Menu", menu)
         logout_button = st.sidebar.button("Logout")
@@ -104,6 +148,10 @@ def main():
             view_member_tasks()
         elif choice == "Update Password":
             update_password()
+        elif choice=="Add Monthly Goals":
+            goal_manager()
+        elif choice=="view monthly goals":
+            view_goals()
     else:
         login()
 
