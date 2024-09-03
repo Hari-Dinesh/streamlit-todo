@@ -5,6 +5,7 @@ from auth import login, signup
 from task_manager import task_manager
 from Goals import goal_manager
 from utils import hash_password, verify_password
+from dashboard import member_dashboard,member_view_dashboard
 import pandas as pd
 
 # MongoDB Client Setup
@@ -122,8 +123,10 @@ def main():
             menu.append("Add Monthly Goals")
             menu.append("View Member Tasks")
             menu.append("Create Member")
+            menu.append("DashBoard")
         elif st.session_state["role"]=="member":
             menu.append("view monthly goals")
+            menu.append("My DashBoard")
 
         choice = st.sidebar.radio("Menu", menu)
         logout_button = st.sidebar.button("Logout")
@@ -152,6 +155,10 @@ def main():
             goal_manager()
         elif choice=="view monthly goals":
             view_goals()
+        elif choice=="DashBoard":
+            member_dashboard()
+        elif choice=="My DashBoard":
+            member_view_dashboard()
     else:
         login()
 
