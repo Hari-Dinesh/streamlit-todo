@@ -5,3 +5,4 @@ schedule
 streamlit-cookies-manager
 apscheduler
 pandas
+matplotlib
