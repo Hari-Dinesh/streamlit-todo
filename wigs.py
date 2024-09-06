@@ -19,17 +19,26 @@ def manage_wigs():
     # Fetch members with role 'member'
     members = [user["username"] for user in users_collection.find({"role": "member"})]
 
-    # Create two tabs: "Add WIGs" and "View WIGs"
-    tab1, tab2 = st.tabs(["Add WIGs", "View WIGs"])
+    # Check if the logged-in user is a team lead
+    is_team_lead = st.session_state.get("role") == "team lead"
 
-    with tab1:
-        # Tab 1: Add WIGs
-        if st.session_state.get("role") == "team lead":
+    # Create two tabs: "Add WIGs" (only for team leads) and "View WIGs" (for both team leads and members)
+    if is_team_lead:
+        tab1, tab2 = st.tabs(["Add WIGs", "View WIGs"])
+    else:
+        tab2, = st.tabs(["View WIGs"])  # Only "View WIGs" for members
+
+    if is_team_lead:
+        with tab1:
+            # Tab 1: Add WIGs (only for team leads)
             st.header("Add New WIG")
 
             # Select Year and Semester for WIGs
-            selected_year = st.selectbox("Select Year", range(datetime.now().year - 1, datetime.now().year + 5), key="wig_year")
-            selected_semester = st.selectbox("Select Semester", ["Sem1", "Sem2"], key="wig_semester")
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                selected_year = st.selectbox("Select Year", range(datetime.now().year - 1, datetime.now().year + 5), key="wig_year")
+            with col2:
+                selected_semester = st.selectbox("Select Semester", ["Sem1", "Sem2"], key="wig_semester")
 
             # Input fields for adding a new WIG
             wig_name = st.text_input("WIG Name")
@@ -50,44 +59,47 @@ def manage_wigs():
                     st.success("WIG added successfully!")
                 else:
                     st.error("Please fill in all the fields to add a WIG.")
-        else:
-            st.info("Only team leads can add WIGs.")
-
+    
     with tab2:
-        # Tab 2: View WIGs
+        # Tab 2: View WIGs (for both team leads and members)
         st.header("View WIGs")
 
         # Common elements for both team leads and members
-        selected_wig_year = st.selectbox("Select WIG Year", range(datetime.now().year - 1, datetime.now().year + 5), key="view_wig_year")
-        selected_wig_semester = st.selectbox("Select WIG Semester", ["Sem1", "Sem2"], key="view_wig_semester")
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            selected_wig_year = st.selectbox("Select WIG Year", range(datetime.now().year - 1, datetime.now().year + 5), key="view_wig_year")
+        with col2:
+            selected_wig_semester = st.selectbox("Select WIG Semester", ["Sem1", "Sem2"], key="view_wig_semester")
 
-        if st.session_state.get("role") == "team lead":
+        if is_team_lead:
             # Team Lead View: Can view and update all WIGs
             wigs = list(wigs_collection.find({"year": selected_wig_year, "semester": selected_wig_semester}))
             if wigs:
                 for wig in wigs:
-                    st.write(f"**WIG Name:** {wig['name']}")
-                    st.write(f"**Description:** {wig['description']}")
-                    st.write(f"**Assigned Member:** {wig['assigned_member']}")
+                    name_col, update_col = st.columns([2, 1])
+                    with name_col:
+                        st.write(f"**WIG Name:** {wig['name']}")
+                        st.write(f"**Description:** {wig['description']}")
+                        st.write(f"**Assigned Member:** {wig['assigned_member']}")
 
-                    # Display updates and allow team lead to add new updates
-                    st.write("**Updates:**")
-                    updates = wig.get("updates", [])
-                    for update in updates:
-                        st.write(f"- {update['member']}: {update['update']}")
-
-                    st.subheader("Add Update")
-                    update_text = st.text_area(f"Update for {wig['name']}", key=f"update_{wig['_id']}")
-                    if st.button(f"Add Update for {wig['name']}", key=f"add_update_{wig['_id']}"):
-                        if update_text:
-                            wigs_collection.update_one(
-                                {"_id": wig["_id"]},
-                                {"$push": {"updates": {"member": st.session_state["username"], "update": update_text}}}
-                            )
-                            st.success("Update added successfully!")
-                            st.experimental_rerun()
-                        else:
-                            st.error("Please enter an update before submitting.")
+                        # Display updates and allow team lead to add new updates
+                        st.write("**Updates:**")
+                        updates = wig.get("updates", [])
+                        for update in updates:
+                            st.write(f"- {update['member']}: {update['update']}")
+                    with update_col:
+                        st.subheader("Add Update")
+                        update_text = st.text_area(f"Update for {wig['name']}", key=f"update_{wig['_id']}")
+                        if st.button(f"Add Update for {wig['name']}", key=f"add_update_{wig['_id']}"):
+                            if update_text:
+                                wigs_collection.update_one(
+                                    {"_id": wig["_id"]},
+                                    {"$push": {"updates": {"member": st.session_state["username"], "update": update_text}}}
+                                )
+                                st.success("Update added successfully!")
+                                st.rerun()
+                            else:
+                                st.error("Please enter an update before submitting.")
             else:
                 st.info("No WIGs found for the selected criteria.")
         else:
@@ -100,27 +112,31 @@ def manage_wigs():
 
             if wigs:
                 for wig in wigs:
-                    st.write(f"**WIG Name:** {wig['name']}")
-                    st.write(f"**Description:** {wig['description']}")
+                    col1, col2 = st.columns([2, 1])
+                    with col1:
+                        st.write(f"**WIG Name:** {wig['name']}")
+                        st.write(f"**Description:** {wig['description']}")
 
-                    # Display updates for the member
-                    st.write("**Updates:**")
-                    updates = wig.get("updates", [])
-                    for update in updates:
-                        st.write(f"- {update['member']}: {update['update']}")
-
-                    st.subheader("Add Update")
-                    update_text = st.text_area(f"Update for {wig['name']}", key=f"update_{wig['_id']}")
-                    if st.button(f"Add Update for {wig['name']}", key=f"add_update_{wig['_id']}"):
-                        if update_text:
-                            wigs_collection.update_one(
-                                {"_id": wig["_id"]},
-                                {"$push": {"updates": {"member": st.session_state["username"], "update": update_text}}}
-                            )
-                            st.success("Update added successfully!")
-                            st.experimental_rerun()
-                        else:
-                            st.error("Please enter an update before submitting.")
+                        # Display updates for the member
+                        st.write("**Updates:**")
+                        updates = wig.get("updates", [])
+                        for update in updates:
+                            st.write(f"- {update['member']}: {update['update']}")
+                    with col2:
+                        st.subheader("Add Update")
+                        update_text = st.text_area(f"Update for {wig['name']}", key=f"update_{wig['_id']}", value=st.session_state.get(f"update_{wig['_id']}", ""))
+                        if st.button(f"Add Update for {wig['name']}", key=f"add_update_{wig['_id']}"):
+                            if update_text:
+                                wigs_collection.update_one(
+                                    {"_id": wig["_id"]},
+                                    {"$push": {"updates": {"member": st.session_state["username"], "update": update_text}}}
+                                )
+                                
+                                st.success("Update added successfully!")
+                                st.session_state[f"update_{wig['_id']}"] = ""
+                                st.rerun()
+                            else:
+                                st.error("Please enter an update before submitting.")
             else:
                 st.info("No WIGs found for the selected criteria.")
 

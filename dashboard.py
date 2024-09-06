@@ -17,7 +17,7 @@ def calculate_progress(goals):
     progress = (total_completed_points / total_story_points * 100) if total_story_points > 0 else 0
     return progress
 
-def member_dashboard():
+def teamlead_dashboard():
     """Dashboard view for team leads."""
     if "username" not in st.session_state:
         st.warning("Please login to access this page")

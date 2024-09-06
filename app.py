@@ -6,6 +6,7 @@ from task_manager import task_manager
 from Goals import goal_manager
 from utils import hash_password, verify_password
 from wigs import manage_wigs
+from dashboard import member_view_dashboard,teamlead_dashboard
 import pandas as pd
 
 # MongoDB Client Setup
@@ -123,7 +124,9 @@ def main():
             menu.append("Add Monthly Goals")
             menu.append("View Member Tasks")
             menu.append("Create Member")
+            menu.append("Dashboard")
         elif st.session_state["role"]=="member":
+            menu.append("Your DashBoard")
             menu.append("view monthly goals")
 
         choice = st.sidebar.radio("Menu", menu)
@@ -155,6 +158,10 @@ def main():
             view_goals()
         elif choice=="wigs":
             manage_wigs()
+        elif choice=="Dashboard":
+            teamlead_dashboard()
+        elif choice=="Your DashBoard":
+            member_view_dashboard()
     else:
         login()
 
