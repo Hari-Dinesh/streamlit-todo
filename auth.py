@@ -3,7 +3,13 @@ import pymongo
 from utils import hash_password, verify_password
 import os
 # MongoDB Client Setup
-client = pymongo.MongoClient(os.getenv('DB_URL'))
+if os.getenv("DB_URL"):
+    # Use environment variable (for local development)
+    mongo_url = os.getenv("DB_URL")
+else:
+    # Use Streamlit secrets (for Streamlit Cloud)
+    mongo_url = st.secrets["db_url"]
+client = pymongo.MongoClient(mongo_url)
 db = client["task_manager"]
 users_collection = db["users"]
 

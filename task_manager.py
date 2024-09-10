@@ -7,7 +7,13 @@ import os
 # from utils import send_email_notification
 
 # MongoDB Client Setup (use your Atlas connection string here)
-client = pymongo.MongoClient(os.getenv('DB_URL'))
+if os.getenv("DB_URL"):
+    # Use environment variable (for local development)
+    mongo_url = os.getenv("DB_URL")
+else:
+    # Use Streamlit secrets (for Streamlit Cloud)
+    mongo_url = st.secrets["db_url"]
+client = pymongo.MongoClient(mongo_url)
 db = client["task_manager"]
 tasks_collection = db["tasks"]
 users_collection = db["users"]
