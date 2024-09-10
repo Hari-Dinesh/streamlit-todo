@@ -1,9 +1,10 @@
 import streamlit as st
 import pymongo
 from datetime import datetime
-
+import os
+import time
 # MongoDB setup
-client = pymongo.MongoClient("mongodb+srv://dinesh:Asdfg123&()@cluster0.5nxca.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = pymongo.MongoClient(os.getenv('DB_URL'))
 db = client["task_manager"]
 users_collection = db["users"]
 wigs_collection = db["wigs"]  # Collection for WIGs
@@ -45,7 +46,7 @@ def manage_wigs():
             wig_description = st.text_area("Description")
             assigned_member = st.selectbox("Assign to Member", ["All"] + members)
 
-            if st.button("Add WIG"):
+            if st.button("Add WIG",disabled=wig_name.strip()==""):
                 if wig_name and wig_description:
                     new_wig = {
                         "name": wig_name,
@@ -57,8 +58,12 @@ def manage_wigs():
                     }
                     wigs_collection.insert_one(new_wig)
                     st.success("WIG added successfully!")
+                    time.sleep(3)
+                    st.rerun()
                 else:
                     st.error("Please fill in all the fields to add a WIG.")
+                    time.sleep(2)
+                    st.rerun()
     
     with tab2:
         # Tab 2: View WIGs (for both team leads and members)
@@ -96,7 +101,8 @@ def manage_wigs():
                                     {"_id": wig["_id"]},
                                     {"$push": {"updates": {"member": st.session_state["username"], "update": update_text}}}
                                 )
-                                st.success("Update added successfully!")
+                                st.success("Updates added successfully!")
+                                time.sleep(3)
                                 st.rerun()
                             else:
                                 st.error("Please enter an update before submitting.")

@@ -8,9 +8,19 @@ from utils import hash_password, verify_password
 from wigs import manage_wigs
 from dashboard import member_view_dashboard,teamlead_dashboard
 import pandas as pd
+import os
+import time
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+    """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # MongoDB Client Setup
-client = pymongo.MongoClient("mongodb+srv://dinesh:Asdfg123&()@cluster0.5nxca.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = pymongo.MongoClient(os.getenv('DB_URL'))
 db = client["task_manager"]
 users_collection = db["users"]
 tasks_collection = db["tasks"]
@@ -92,7 +102,11 @@ def update_password():
     new_password = st.text_input("New Password", type='password', key="new_password")
     confirm_new_password = st.text_input("Confirm New Password", type='password', key="confirm_new_password")
     
-    if st.button("Update Password", key="update_password_button"):
+    # Define the button without the on_click callback
+    if st.button("Update Password", 
+                 disabled=current_password.strip() == "" or new_password.strip() == "" or confirm_new_password.strip() == ""):
+        
+        # Perform database check and password update
         user = users_collection.find_one({"username": st.session_state["username"]})
         
         if user and verify_password(current_password, user["password"]):
@@ -103,6 +117,10 @@ def update_password():
                     {"$set": {"password": new_hashed_password}}
                 )
                 st.success("Your password has been updated successfully!")
+                # Optional: Add a small delay and rerun the app to clear the fields visually
+                time.sleep(3)
+                st.rerun()
+
             else:
                 st.error("New passwords do not match.")
         else:

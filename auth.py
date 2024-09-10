@@ -1,9 +1,9 @@
 import streamlit as st
 import pymongo
 from utils import hash_password, verify_password
-
+import os
 # MongoDB Client Setup
-client = pymongo.MongoClient("mongodb+srv://dinesh:Asdfg123&()@cluster0.5nxca.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = pymongo.MongoClient(os.getenv('DB_URL'))
 db = client["task_manager"]
 users_collection = db["users"]
 
@@ -40,7 +40,7 @@ def login():
     username = st.text_input("Username", key="login_username")
     password = st.text_input("Password", type='password', key="login_password")
     
-    if st.button("Login", key="login_button"):
+    if st.button("Login",disabled=username.strip()=="" or password.strip()=="", key="login_button"):
         user = users_collection.find_one({"username": username})
         if user and verify_password(password, user["password"]):
             st.session_state["logged_in"] = True

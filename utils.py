@@ -3,10 +3,10 @@ import pymongo
 import time
 from datetime import datetime
 from apscheduler.schedulers.blocking import BlockingScheduler
+import os
 
 
-
-client = pymongo.MongoClient("mongodb+srv://dinesh:Asdfg123&()@cluster0.5nxca.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = pymongo.MongoClient(os.getenv('DB_URL'))
 db = client["task_manager"]
 users_collection = db["users"]
 tasks_collection = db["tasks"]

@@ -3,10 +3,11 @@ import pymongo
 from datetime import datetime, timedelta
 from bson.objectid import ObjectId
 import time
+import os
 # from utils import send_email_notification
 
 # MongoDB Client Setup (use your Atlas connection string here)
-client = pymongo.MongoClient("mongodb+srv://dinesh:Asdfg123&()@cluster0.5nxca.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = pymongo.MongoClient(os.getenv('DB_URL'))
 db = client["task_manager"]
 tasks_collection = db["tasks"]
 users_collection = db["users"]
@@ -22,7 +23,7 @@ def task_manager():
     with tab1:
         st.header("Today's Tasks")
         task = st.text_area("What did you work on today?", key="add_task_textarea")
-        if st.button("Add Task", key="add_task_button"):
+        if st.button("Add Task", disabled=task.strip()=="", key="add_task_button"):
             if task.strip()=="":
                 st.error("empty task cannot be added")
             else:
@@ -33,6 +34,8 @@ def task_manager():
                 }
                 tasks_collection.insert_one(task_document)
                 st.success("Task added!")
+                time.sleep(3)
+                st.rerun()
             
         # Display today's tasks
         today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)

@@ -3,9 +3,9 @@ import pymongo
 from datetime import datetime
 import pandas as pd
 from bson import ObjectId
-
+import os
 # MongoDB setup
-client = pymongo.MongoClient("mongodb+srv://dinesh:Asdfg123&()@cluster0.5nxca.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = pymongo.MongoClient(os.getenv('DB_URL'))
 db = client["task_manager"]
 goals_collection = db['goals']
 users_collection = db["users"]

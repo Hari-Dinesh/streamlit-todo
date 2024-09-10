@@ -6,3 +6,4 @@ streamlit-cookies-manager
 apscheduler
 pandas
 matplotlib
+python-dotenv
