@@ -92,7 +92,15 @@ def manage_wigs():
                         st.write(f"**WIG Name:** {wig['name']}")
                         st.write(f"**Description:** {wig['description']}")
                         st.write(f"**Assigned Member:** {wig['assigned_member']}")
-
+                        # Progress Bar
+                        progress = st.slider(f"Progress for {wig['name']}", 0, 100, wig.get("progress", 0))
+                        if st.button(f"Update Progress for {wig['name']}", key=f"update_progress_{wig['_id']}"):
+                            wigs_collection.update_one(
+                                {"_id": wig["_id"]},
+                                {"$set": {"progress": progress}}
+                            )
+                            st.success("Progress updated successfully!")
+                            st.rerun()
                         # Display updates and allow team lead to add new updates
                         st.write("**Updates:**")
                         updates = wig.get("updates", [])
