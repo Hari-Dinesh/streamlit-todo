@@ -7,3 +7,4 @@ apscheduler
 pandas
 matplotlib
 python-dotenv
+plotly

@@ -2,7 +2,7 @@ import streamlit as st
 import pymongo
 import pandas as pd
 from datetime import datetime
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import os
 
 # MongoDB setup
@@ -26,19 +26,31 @@ def display_wig_progress(member, year, semester):
     
     if wigs:
         wig_names = [wig["name"] for wig in wigs]
-        wig_progress = [wig.get("progress", 0) for wig in wigs]
+        wig_progress = [wig.get("progress", 0) if wig.get("progress") is not None else 0 for wig in wigs]  # Default to 0 if no progress
 
-        # Display WIG progress chart with dark background
-        fig, ax = plt.subplots()
-        fig.patch.set_facecolor('black')
-        ax.set_facecolor('black')
-        ax.bar(wig_names, wig_progress, color='skyblue')
-        ax.set_xlabel("WIG Name", color='white')
-        ax.set_ylabel("Progress (%)", color='white')
-        ax.set_title(f"WIG Progress of {member} in {year} {semester}", color='white')
-        ax.tick_params(axis='x', colors='white', rotation=45)
-        ax.tick_params(axis='y', colors='white')
-        st.pyplot(fig)
+        # Create the bar chart with Plotly
+        fig = go.Figure(
+            data=[
+                go.Bar(
+                    x=wig_names, 
+                    y=wig_progress, 
+                    text=[f"{p:.2f}%" for p in wig_progress],  # Hover text shows percentage
+                    hoverinfo="text",  # Display hover text on hover
+                    marker=dict(color='skyblue')
+                )
+            ]
+        )
+        fig.update_layout(
+            title=f"WIG Progress of {member} in {year} {semester}",
+            xaxis_title="WIG Name",
+            yaxis_title="Progress (%)",
+            plot_bgcolor='black',
+            paper_bgcolor='black',
+            font=dict(color='white')
+        )
+        fig.update_yaxes(range=[0, 100])  # Set y-axis range from 0 to 100%
+        st.plotly_chart(fig)
+
     else:
         st.info(f"No WIGs found for {member} in {year} {semester}.")
 
@@ -70,18 +82,29 @@ def teamlead_dashboard():
                 progress = calculate_progress(goals)
                 monthly_progress.append(progress)
 
-            # Display progress chart with dark background
-            fig, ax = plt.subplots()
-            fig.patch.set_facecolor('black')
-            ax.set_facecolor('black')
-            ax.bar(range(1, 13), monthly_progress, color='skyblue')
-            ax.set_xlabel("Month", color='white')
-            ax.set_ylabel("Progress (%)", color='white')
-            ax.set_title(f"Progress of {selected_member} in {selected_year}", color='white')
-            ax.set_xticks(range(1, 13))
-            ax.set_xticklabels(['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'], color='white')
-            ax.tick_params(axis='y', colors='white')
-            st.pyplot(fig)
+            # Create a bar chart for monthly progress
+            fig = go.Figure(
+                data=[
+                    go.Bar(
+                        x=list(range(1, 13)), 
+                        y=monthly_progress, 
+                        text=[f"{p:.2f}%" for p in monthly_progress],  # Hover text shows percentage
+                        hoverinfo="text",  # Display hover text on hover
+                        marker=dict(color='skyblue')
+                    )
+                ]
+            )
+            fig.update_layout(
+                title=f"Progress of {selected_member} in {selected_year}",
+                xaxis_title="Month",
+                yaxis_title="Progress (%)",
+                plot_bgcolor='black',
+                paper_bgcolor='black',
+                font=dict(color='white')
+            )
+            fig.update_yaxes(range=[0, 100])  # Set y-axis range from 0 to 100%
+            fig.update_xaxes(tickvals=list(range(1, 13)), ticktext=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'])
+            st.plotly_chart(fig)
 
     # Tab 2: View Average Progress for All Members
     with tab2:
@@ -100,18 +123,29 @@ def teamlead_dashboard():
                     overall_progress = calculate_progress(yearly_goals)
                     member_averages[member] = overall_progress
 
-            # Plotting the average progress for all members as a bar graph with dark background
+            # Create the bar chart for average progress
             if member_averages:
-                fig, ax = plt.subplots()
-                fig.patch.set_facecolor('black')
-                ax.set_facecolor('black')
-                ax.bar(member_averages.keys(), member_averages.values(), color='skyblue')
-                ax.set_xlabel("Members", color='white')
-                ax.set_ylabel("Average Progress (%)", color='white')
-                ax.set_title(f"Average Progress of Members in {selected_year}", color='white')
-                ax.tick_params(axis='x', colors='white')
-                ax.tick_params(axis='y', colors='white')
-                st.pyplot(fig)
+                fig = go.Figure(
+                    data=[
+                        go.Bar(
+                            x=list(member_averages.keys()), 
+                            y=list(member_averages.values()), 
+                            text=[f"{p:.2f}%" for p in member_averages.values()],  # Hover text shows percentage
+                            hoverinfo="text",  # Display hover text on hover
+                            marker=dict(color='skyblue')
+                        )
+                    ]
+                )
+                fig.update_layout(
+                    title=f"Average Progress of Members in {selected_year}",
+                    xaxis_title="Members",
+                    yaxis_title="Average Progress (%)",
+                    plot_bgcolor='black',
+                    paper_bgcolor='black',
+                    font=dict(color='white')
+                )
+                fig.update_yaxes(range=[0, 100])  # Set y-axis range from 0 to 100%
+                st.plotly_chart(fig)
             else:
                 st.info("No goals found for any member for the selected year.")
 
@@ -124,8 +158,7 @@ def teamlead_dashboard():
         selected_semester = st.selectbox("Select Semester", ["Sem1", "Sem2"], key="wig_semester")
 
         if selected_member and selected_year and selected_semester:
-            wig_progress = display_wig_progress(selected_member, selected_year, selected_semester)
-            st.write(f"**WIG Progress Of {selected_year} {selected_semester}:** {wig_progress:.2f}%")
+            display_wig_progress(selected_member, selected_year, selected_semester)
 
 def member_view_dashboard():
     """Dashboard view for individual members to see their yearly progress."""
@@ -149,18 +182,29 @@ def member_view_dashboard():
                 progress = calculate_progress(goals)
                 monthly_progress.append(progress)
 
-            # Display progress chart with dark background
-            fig, ax = plt.subplots()
-            fig.patch.set_facecolor('black')
-            ax.set_facecolor('black')
-            ax.bar(range(1, 13), monthly_progress, color='skyblue')
-            ax.set_xlabel("Month", color='white')
-            ax.set_ylabel("Progress (%)", color='white')
-            ax.set_title(f"Your Progress in {selected_year}", color='white')
-            ax.set_xticks(range(1, 13))
-            ax.set_xticklabels(['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'], color='white')
-            ax.tick_params(axis='y', colors='white')
-            st.pyplot(fig)
+            # Create the bar chart for monthly progress
+            fig = go.Figure(
+                data=[
+                    go.Bar(
+                        x=list(range(1, 13)), 
+                        y=monthly_progress, 
+                        text=[f"{p:.2f}%" for p in monthly_progress],  # Hover text shows percentage
+                        hoverinfo="text",  # Display hover text on hover
+                        marker=dict(color='skyblue')
+                    )
+                ]
+            )
+            fig.update_layout(
+                title=f"Your Progress in {selected_year}",
+                xaxis_title="Month",
+                yaxis_title="Progress (%)",
+                plot_bgcolor='black',
+                paper_bgcolor='black',
+                font=dict(color='white')
+            )
+            fig.update_yaxes(range=[0, 100])  # Set y-axis range from 0 to 100%
+            fig.update_xaxes(tickvals=list(range(1, 13)), ticktext=['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'])
+            st.plotly_chart(fig)
 
     # Tab 2: View WIGs Progress
     with tab2:
@@ -170,8 +214,7 @@ def member_view_dashboard():
         selected_semester = st.selectbox("Select Semester", ["Sem1", "Sem2"], key="member_wig_semester")
 
         if selected_year and selected_semester:
-            wig_progress = display_wig_progress( st.session_state["username"],selected_year, selected_semester)
-            st.write(f"**Your WIG Progress in {selected_year} {selected_semester}:** {wig_progress:.2f}%")
+            display_wig_progress(st.session_state["username"], selected_year, selected_semester)
 
 if __name__ == "__main__":
     # Check user role and display the appropriate dashboard
