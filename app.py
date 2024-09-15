@@ -2,11 +2,11 @@ import streamlit as st
 import pymongo
 from datetime import datetime
 from auth import login, signup
-from task_manager import task_manager
-from Goals import goal_manager
-from utils import hash_password, verify_password
-from wigs import manage_wigs
-from dashboard import member_view_dashboard,teamlead_dashboard
+from screens.task_manager import task_manager
+from screens.Goals import goal_manager
+from screens.utils import hash_password, verify_password
+from screens.wigs import manage_wigs
+from screens.dashboard import member_view_dashboard,teamlead_dashboard
 import pandas as pd
 import os
 import time
@@ -39,11 +39,14 @@ def view_member_tasks():
     # Select a member
     members = users_collection.find({"role": "member"})
     member_usernames = [member["username"] for member in members]
-    selected_member = st.selectbox("Select a member", member_usernames)
-    
+    col1,col2,col3=st.columns([1,1,1])
+    with col1:
+        selected_member = st.selectbox("Select a member", member_usernames)
     # Select a date range
-    start_date = st.date_input("Start Date", key="start_date")
-    end_date = st.date_input("End Date", key="end_date")
+    with col2:
+        start_date = st.date_input("Start Date", key="start_date")
+    with col3:
+        end_date = st.date_input("End Date", key="end_date")
     
     # Fetch and display tasks within the selected date range
     if selected_member:
@@ -133,61 +136,68 @@ def update_password():
             st.error("Current password is incorrect.")
 
 # Main Application Function
+def get_menu(role):
+    base_menu = []
+    if role == "team lead":
+        base_menu.extend(["Dashboard","Task Manager", "View Member Tasks","wigs", "Add Monthly Goals","Create Member" ])
+    elif role == "member":
+        base_menu.extend(["Your DashBoard","Task Manager","wigs" ,"view monthly goals"])
+    return base_menu
+
+# Function to handle user logout
+def handle_logout():
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.session_state["logged_in"] = False
+    st.success("You have been logged out. The page will refresh shortly.")
+    st.rerun()
+
+# Main function
 def main():
+    # Initialize session state if not already done
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
         st.session_state["username"] = None
         st.session_state["role"] = None
 
     if st.session_state["logged_in"]:
+        # Display welcome message in the sidebar
         st.sidebar.title(f"Welcome, {st.session_state['username']}")
 
-        # Sidebar navigation menu with radio buttons
-        menu = ["Task Manager", "Update Password","wigs"]
-        if st.session_state["role"] == "team lead":
-            menu.append("Add Monthly Goals")
-            menu.append("View Member Tasks")
-            menu.append("Create Member")
-            menu.append("Dashboard")
-        elif st.session_state["role"]=="member":
-            menu.append("Your DashBoard")
-            menu.append("view monthly goals")
-
-        choice = st.sidebar.radio("Menu", menu)
-        logout_button = st.sidebar.button("Logout")
-
-        if logout_button:
-            # Reset session state to log out the user
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.session_state["logged_in"] = False
-            st.session_state["username"] = None
-            st.session_state["role"] = None
+        # Generate the menu based on the user role
+        menu = get_menu(st.session_state["role"])
+        choice = st.sidebar.selectbox("Menu", menu)
+        col1,col2=st.columns([1,1])
+        with col2:
+            Update_Password=st.sidebar.button("Change Password")
+        with col1:
             
-            # Use JavaScript to refresh the page
-            st.success("You have been logged out. The page will refresh shortly.")
-            st.rerun()
+            logout_button = st.sidebar.button("Logout")
 
+       
+        if Update_Password:
+            update_password()  # Call the function to update the password
+        if logout_button:
+            handle_logout()
+        # Route the user to the corresponding function based on their choice
         if choice == "Task Manager":
-            task_manager()  # Navigate to Task Manager
+            task_manager()  # Call task manager
         elif choice == "Create Member" and st.session_state["role"] == "team lead":
-            signup()
+            signup()  # Call the function to create a new member
         elif choice == "View Member Tasks" and st.session_state["role"] == "team lead":
-            view_member_tasks()
-        elif choice == "Update Password":
-            update_password()
-        elif choice=="Add Monthly Goals":
-            goal_manager()
-        elif choice=="view monthly goals":
-            view_goals()
-        elif choice=="wigs":
-            manage_wigs()
-        elif choice=="Dashboard":
-            teamlead_dashboard()
-        elif choice=="Your DashBoard":
-            member_view_dashboard()
+            view_member_tasks()  # Call the function to view member tasks
+       
+        elif choice == "Add Monthly Goals" and st.session_state["role"] == "team lead":
+            goal_manager()  # Call the function to add monthly goals
+        elif choice == "view monthly goals" and st.session_state["role"] == "member":
+            view_goals()  # Call the function to view monthly goals
+        elif choice == "wigs":
+            manage_wigs()  # Call the function to manage WIGs
+        elif choice == "Dashboard" and st.session_state["role"] == "team lead":
+            teamlead_dashboard()  # Call the function for the team lead dashboard
+        elif choice == "Your DashBoard" and st.session_state["role"] == "member":
+            member_view_dashboard()  # Call the function for the member's dashboard
     else:
-        login()
-
+        login() 
 if __name__ == '__main__':
     main()

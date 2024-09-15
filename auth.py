@@ -1,6 +1,6 @@
 import streamlit as st
 import pymongo
-from utils import hash_password, verify_password
+from screens.utils import hash_password, verify_password
 import os
 # MongoDB Client Setup
 # if os.getenv("DB_URL"):
@@ -39,6 +39,8 @@ def signup():
             user = create_user(username, password, role)
             users_collection.insert_one(user)
             st.success(f"{role} created successfully!")
+            st.sleep(2)
+            st.rerun()
 
 # Login Function
 def login():

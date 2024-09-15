@@ -72,8 +72,11 @@ def teamlead_dashboard():
         st.header("View Member Progress by Year")
         
         # Select member and year
-        selected_member = st.selectbox("Select Member", members, key="progress_member")
-        selected_year = st.selectbox("Select Year", range(datetime.now().year, datetime.now().year + 5), key="progress_year")
+        col1,col2=st.columns([1,1])
+        with col1:
+            selected_member = st.selectbox("Select Member", members, key="progress_member")
+        with col2:
+            selected_year = st.selectbox("Select Year", range(datetime.now().year, datetime.now().year + 5), key="progress_year")
 
         if selected_member and selected_year:
             monthly_progress = []
@@ -152,10 +155,13 @@ def teamlead_dashboard():
     # Tab 3: View WIGs Progress
     with tab3:
         st.header("View WIGs Progress")
-
-        selected_member = st.selectbox("Select Member", members, key="wig_member")
-        selected_year = st.selectbox("Select Year for WIGs", range(datetime.now().year, datetime.now().year + 5), key="wig_year")
-        selected_semester = st.selectbox("Select Semester", ["Sem1", "Sem2"], key="wig_semester")
+        col1,col2,col3=st.columns([1,1,1])
+        with col1:
+            selected_member = st.selectbox("Select Member", members, key="wig_member")
+        with col2:
+            selected_year = st.selectbox("Select Year for WIGs", range(datetime.now().year, datetime.now().year + 5), key="wig_year")
+        with col3:
+            selected_semester = st.selectbox("Select Semester", ["Sem1", "Sem2"], key="wig_semester")
 
         if selected_member and selected_year and selected_semester:
             display_wig_progress(selected_member, selected_year, selected_semester)

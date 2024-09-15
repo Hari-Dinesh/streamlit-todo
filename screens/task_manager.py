@@ -58,8 +58,17 @@ def task_manager():
     with tab2:
         st.header("Task History")
         st.write("Select a date range to view tasks:")
-        start_date = st.date_input("Start Date", key="history_start_date")
-        end_date = st.date_input("End Date", key="history_end_date", value=datetime.now().date())
+        # date_range = st.date_input(
+        #     "Select Date Range", 
+        #     value=(datetime.now().date(), datetime.now().date()),  # Default to today
+        #     key="history_date_range"
+        # )
+
+        col1,col2=st.columns([1,1])
+        with col1:
+            start_date = st.date_input("Start Date", key="history_start_date")
+        with col2:
+            end_date = st.date_input("End Date", key="history_end_date", value=datetime.now().date())
 
         # Convert selected dates to datetime
         start_of_day = datetime.combine(start_date, datetime.min.time())

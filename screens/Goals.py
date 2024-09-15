@@ -63,6 +63,7 @@ def goal_manager():
             }
             goals_collection.insert_one(new_goal)
             st.success("Goal added successfully!")
+            time.sleep(3)
             st.rerun()
 
         # Fetch goals for the selected member, month, and year
@@ -111,9 +112,13 @@ def goal_manager():
         st.header("View and Update Member Goals")
 
         # Select member, month, and year to view goals
-        selected_member = st.selectbox("Select Member to View Goals", members, key="view_member")
-        selected_month = st.selectbox("Select Month", range(1, 13), format_func=lambda x: datetime(2022, x, 1).strftime('%B'), key="view_month")
-        selected_year = st.selectbox("Select Year", range(datetime.now().year, datetime.now().year + 5), key="view_year")
+        col1,col2,col3=st.columns([1,1,1])
+        with col1:
+            selected_member = st.selectbox("Select Member to View Goals", members, key="view_member")
+        with col2:
+            selected_month = st.selectbox("Select Month", range(1, 13), format_func=lambda x: datetime(2022, x, 1).strftime('%B'), key="view_month")
+        with col3:
+            selected_year = st.selectbox("Select Year", range(datetime.now().year, datetime.now().year + 5), key="view_year")
 
         # Fetch goals for the selected member, month, and year
         view_criteria = {"member": selected_member, "month": selected_month, "year": selected_year}
@@ -159,6 +164,7 @@ def goal_manager():
                             {"$set": {"completed": new_completed}}
                         )
                 st.success("Completed points updated successfully!")
+                time.sleep(3)
                 st.rerun()
 
         else:
